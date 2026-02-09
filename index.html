@@ -9,67 +9,66 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         header { background: var(--cynthia-blue); color: white; padding: 25px 15px; text-align: center; border-bottom: 5px solid var(--cynthia-dark); }
         .container { max-width: 550px; margin: 20px auto; padding: 0 15px; }
-        .date-header { background: var(--cynthia-dark); color: white; padding: 12px; border-radius: 6px; margin: 30px 0 15px; font-weight: bold; text-transform: uppercase; text-align: center; }
-        .match-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); border-top: 8px solid var(--cynthia-blue); }
-        .teams-container { font-size: 1.8rem; line-height: 1.1; margin: 15px 0; color: #000; text-transform: uppercase; }
+        .date-header { background: var(--cynthia-dark); color: white; padding: 12px; border-radius: 6px; margin: 30px 0 15px; font-weight: bold; text-transform: uppercase; text-align: center; font-size: 1.1rem; }
+        .match-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); border-top: 10px solid var(--cynthia-blue); }
+        .teams-container { font-size: 1.9rem; line-height: 1.1; margin: 15px 0; color: #000; text-transform: uppercase; }
         .highlight-cynthia { font-weight: 900; color: var(--cynthia-blue); display: block; }
         .other-team { font-weight: 400; display: block; }
         .vs { font-size: 0.8rem; color: #bbb; margin: 8px 0; display: block; font-weight: bold; }
         .details-grid { font-size: 1rem; color: #444; display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee; }
-        .field-box { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-        .map-btn { background: var(--cynthia-blue); color: white; text-decoration: none; font-weight: 700; padding: 15px; border-radius: 8px; text-align: center; display: block; margin-top: 10px; }
-        .error-msg { background: #fee; color: red; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid red; }
-        .loading { text-align: center; padding: 50px; color: #999; }
+        .field-box { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee; line-height: 1.4; }
+        .map-btn { background: var(--cynthia-blue); color: white; text-decoration: none; font-weight: 700; padding: 16px; border-radius: 8px; text-align: center; display: block; margin-top: 10px; }
+        .error-box { background: #fff0f0; border: 2px solid #ff0000; padding: 20px; border-radius: 10px; color: #b00; text-align: center; }
+        .loading { text-align: center; padding: 50px; color: #666; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0;">CYNTHIA 1920</h1>
-    <p style="margin:5px 0 0;">Programma Gare Online</p>
+    <h1 style="margin:0; font-size: 2.2rem;">CYNTHIA 1920</h1>
+    <p style="margin:5px 0 0; font-weight: 300;">Programma Gare Settimanale</p>
 </header>
 
 <div class="container" id="programma">
-    <div class="loading" id="status">🔄 Caricamento dati da Google Sheets...</div>
+    <div class="loading" id="status-msg">🔄 Caricamento dati in corso...</div>
 </div>
 
 <script>
-    // USA IL TUO LINK CSV QUI SOTTO
+    // IL TUO LINK CSV
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaeFgrwKi6R2yx8p-LQwfnY5i0joGdFGgMK9EGLCCdI9B6fd6zGGrOLLp1w-ffwt6YxDpTJCqAtd8u/pub?output=csv';
 
     function formatTeam(name) {
         if (!name) return "";
-        const isCynthia = name.toLowerCase().includes('cynthia');
-        return `<span class="${isCynthia ? 'highlight-cynthia' : 'other-team'}">${name.trim()}</span>`;
+        const cleanName = name.replace(/"/g, '').trim();
+        const isCynthia = cleanName.toLowerCase().includes('cynthia');
+        return `<span class="${isCynthia ? 'highlight-cynthia' : 'other-team'}">${cleanName}</span>`;
     }
 
     async function loadGare() {
         const container = document.getElementById('programma');
-        const status = document.getElementById('status');
-
         try {
             const response = await fetch(CSV_URL);
-            if (!response.ok) throw new Error("Link Google Sheets non valido o non pubblicato.");
+            if (!response.ok) throw new Error("Google Sheets non risponde. Verifica la pubblicazione.");
             
-            const data = await response.text();
+            const text = await response.text();
+            // Divide le righe gestendo diversi formati di a capo
+            const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
             
-            // Prova a dividere per riga e poi identifica il separatore (virgola o punto e virgola)
-            const rows = data.split(/\r?\n/).filter(row => row.trim() !== "");
-            if (rows.length < 2) throw new Error("Il foglio sembra vuoto.");
+            if (rows.length < 2) throw new Error("Il foglio Google sembra vuoto o non contiene dati.");
 
             container.innerHTML = '';
             let currentDate = '';
 
-            // Saltiamo l'intestazione
             for (let i = 1; i < rows.length; i++) {
-                // Riconoscimento automatico separatore , o ;
+                // Gestisce sia virgola che punto e virgola come separatore
                 let cols = rows[i].includes(';') ? rows[i].split(';') : rows[i].split(',');
                 
-                // Rimuoviamo eventuali virgolette dai dati
+                // Pulisce ogni colonna da virgolette e spazi inutili
                 cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
                 if (cols.length < 6) continue;
 
+                // Mappatura colonne basata sulle tue intestazioni
                 const [camp, gir, gara, dataG, ora, casa, ospite, campo, tipo, indirizzo, comune, maps] = cols;
 
                 if (dataG && dataG !== currentDate) {
@@ -79,14 +78,14 @@
 
                 container.innerHTML += `
                     <div class="match-card">
-                        <span style="font-size:0.8rem; font-weight:700; color:#666; text-transform:uppercase;">${camp} | ${gir}</span>
+                        <span style="font-size:0.85rem; font-weight:800; color:#888; text-transform:uppercase;">${camp} | ${gir}</span>
                         <div class="teams-container">
                             ${formatTeam(casa)}
-                            <span class="vs">— contro —</span>
+                            <span class="vs">vs</span>
                             ${formatTeam(ospite)}
                         </div>
                         <div class="details-grid">
-                            <div>🕒 Ore: <strong>${ora}</strong> | 🔢 Giornata: <strong>${gara}</strong></div>
+                            <div style="font-size:1.1rem">🕒 Ore: <strong>${ora}</strong> | Giornata: <strong>${gara}</strong></div>
                             <div class="field-box">
                                 🏟️ <strong>${campo}</strong> (${tipo})<br>
                                 <small>📍 ${indirizzo}, ${comune}</small>
@@ -96,17 +95,19 @@
                     </div>
                 `;
             }
-        } catch (e) {
+        } catch (err) {
             container.innerHTML = `
-                <div class="error-msg">
-                    <strong>ERRORE DI CONNESSIONE</strong><br>
-                    ${e.message}<br><br>
-                    <small>Verifica che il link CSV sia corretto e il file sia "Pubblicato sul web".</small>
+                <div class="error-box">
+                    <strong>⚠️ ERRORE DI CARICAMENTO</strong><br><br>
+                    ${err.message}<br><br>
+                    <small>Assicurati di aver Pubblicato il foglio come CSV e che il link sia corretto.</small>
                 </div>`;
         }
     }
 
+    // Esegue la funzione
     loadGare();
 </script>
+
 </body>
 </html>
