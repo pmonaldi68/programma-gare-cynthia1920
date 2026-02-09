@@ -8,17 +8,91 @@
         :root { --cynthia-blue: #004595; --cynthia-dark: #002d62; --white: #ffffff; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
         header { background: var(--cynthia-blue); color: white; padding: 25px 15px; text-align: center; border-bottom: 5px solid var(--cynthia-dark); }
+        
         .container { max-width: 550px; margin: 20px auto; padding: 0 15px; }
-        .date-header { background: var(--cynthia-dark); color: white; padding: 12px; border-radius: 6px; margin: 30px 0 15px; font-weight: bold; text-transform: uppercase; text-align: center; font-size: 1.1rem; }
-        .match-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); border-top: 10px solid var(--cynthia-blue); }
-        .teams-container { font-size: 1.9rem; line-height: 1.1; margin: 15px 0; color: #000; text-transform: uppercase; }
+        
+        /* DATA - Molto evidente */
+        .date-header { 
+            background: #333; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 40px 0 15px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            text-align: center; 
+            font-size: 1.4rem; 
+            letter-spacing: 2px;
+        }
+
+        .match-card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            border-top: 12px solid var(--cynthia-blue); 
+        }
+
+        /* CATEGORIA - RICHIESTA: PIÙ GRANDE */
+        .campionato-info { 
+            font-size: 1.6rem; /* Aumentato drasticamente */
+            font-weight: 900; 
+            color: var(--cynthia-blue); 
+            text-transform: uppercase; 
+            display: block;
+            margin-bottom: 15px;
+            line-height: 1.2;
+            border-bottom: 3px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        /* NOMI SQUADRE - Grandi */
+        .teams-container { 
+            font-size: 2rem; 
+            line-height: 1.1; 
+            margin: 20px 0; 
+            color: #000; 
+            text-transform: uppercase; 
+        }
+
         .highlight-cynthia { font-weight: 900; color: var(--cynthia-blue); display: block; }
         .other-team { font-weight: 400; display: block; }
-        .vs { font-size: 0.8rem; color: #bbb; margin: 8px 0; display: block; font-weight: bold; }
-        .details-grid { font-size: 1rem; color: #444; display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee; }
-        .field-box { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee; line-height: 1.4; }
-        .map-btn { background: var(--cynthia-blue); color: white; text-decoration: none; font-weight: 700; padding: 16px; border-radius: 8px; text-align: center; display: block; margin-top: 10px; }
-        .error-box { background: #fff0f0; border: 2px solid #ff0000; padding: 20px; border-radius: 10px; color: #b00; text-align: center; }
+        .vs { font-size: 0.9rem; color: #bbb; margin: 10px 0; display: block; font-weight: bold; text-align: center; }
+
+        .details-grid { 
+            font-size: 1.1rem; 
+            color: #444; 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 15px; 
+            margin-top: 20px; 
+            padding-top: 20px; 
+            border-top: 2px dashed #eee; 
+        }
+
+        .field-box { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #ddd; 
+            line-height: 1.5; 
+        }
+
+        .map-btn { 
+            background: var(--cynthia-blue); 
+            color: white; 
+            text-decoration: none; 
+            font-weight: 900; 
+            padding: 20px; 
+            border-radius: 10px; 
+            text-align: center; 
+            display: block; 
+            margin-top: 10px; 
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
         .loading { text-align: center; padding: 50px; color: #666; font-size: 1.2rem; }
     </style>
 </head>
@@ -30,11 +104,10 @@
 </header>
 
 <div class="container" id="programma">
-    <div class="loading" id="status-msg">🔄 Caricamento dati in corso...</div>
+    <div class="loading">🔄 Caricamento categorie e gare...</div>
 </div>
 
 <script>
-    // IL TUO LINK CSV
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaeFgrwKi6R2yx8p-LQwfnY5i0joGdFGgMK9EGLCCdI9B6fd6zGGrOLLp1w-ffwt6YxDpTJCqAtd8u/pub?output=csv';
 
     function formatTeam(name) {
@@ -48,27 +121,18 @@
         const container = document.getElementById('programma');
         try {
             const response = await fetch(CSV_URL);
-            if (!response.ok) throw new Error("Google Sheets non risponde. Verifica la pubblicazione.");
-            
             const text = await response.text();
-            // Divide le righe gestendo diversi formati di a capo
             const rows = text.split(/\r?\n/).filter(line => line.trim() !== "");
             
-            if (rows.length < 2) throw new Error("Il foglio Google sembra vuoto o non contiene dati.");
-
             container.innerHTML = '';
             let currentDate = '';
 
             for (let i = 1; i < rows.length; i++) {
-                // Gestisce sia virgola che punto e virgola come separatore
                 let cols = rows[i].includes(';') ? rows[i].split(';') : rows[i].split(',');
-                
-                // Pulisce ogni colonna da virgolette e spazi inutili
                 cols = cols.map(c => c.replace(/^"|"$/g, '').trim());
 
                 if (cols.length < 6) continue;
 
-                // Mappatura colonne basata sulle tue intestazioni
                 const [camp, gir, gara, dataG, ora, casa, ospite, campo, tipo, indirizzo, comune, maps] = cols;
 
                 if (dataG && dataG !== currentDate) {
@@ -78,14 +142,17 @@
 
                 container.innerHTML += `
                     <div class="match-card">
-                        <span style="font-size:0.85rem; font-weight:800; color:#888; text-transform:uppercase;">${camp} | ${gir}</span>
+                        <span class="campionato-info">${camp}</span>
+                        <div style="font-size: 0.9rem; color: #888; margin-top: -10px; margin-bottom: 15px;">GIRONE ${gir} | GIORNATA ${gara}</div>
+                        
                         <div class="teams-container">
                             ${formatTeam(casa)}
-                            <span class="vs">vs</span>
+                            <span class="vs">INCONTRA</span>
                             ${formatTeam(ospite)}
                         </div>
+                        
                         <div class="details-grid">
-                            <div style="font-size:1.1rem">🕒 Ore: <strong>${ora}</strong> | Giornata: <strong>${gara}</strong></div>
+                            <div style="font-size: 1.3rem;">🕒 ORE: <strong>${ora}</strong></div>
                             <div class="field-box">
                                 🏟️ <strong>${campo}</strong> (${tipo})<br>
                                 <small>📍 ${indirizzo}, ${comune}</small>
@@ -96,16 +163,10 @@
                 `;
             }
         } catch (err) {
-            container.innerHTML = `
-                <div class="error-box">
-                    <strong>⚠️ ERRORE DI CARICAMENTO</strong><br><br>
-                    ${err.message}<br><br>
-                    <small>Assicurati di aver Pubblicato il foglio come CSV e che il link sia corretto.</small>
-                </div>`;
+            container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Errore nel caricamento dei dati.</div>`;
         }
     }
 
-    // Esegue la funzione
     loadGare();
 </script>
 
