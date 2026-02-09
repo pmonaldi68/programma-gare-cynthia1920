@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cynthia 1920 - Programma Gare</title>
+    <style>
+        :root {
+            --cynthia-blue: #004595;
+            --cynthia-dark: #002d62;
+            --white: #ffffff;
+            --bg: #f0f2f5;
+        }
+
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 50px; }
+        
+        header { 
+            background: var(--cynthia-blue); 
+            color: white; 
+            padding: 25px 15px; 
+            text-align: center; 
+            border-bottom: 5px solid var(--cynthia-dark);
+        }
+
+        .container { max-width: 550px; margin: 20px auto; padding: 0 15px; }
+
+        .date-header {
+            background: var(--cynthia-dark);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 30px 0 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .match-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            border-top: 8px solid var(--cynthia-blue);
+        }
+
+        .campionato-info { 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            color: #666; 
+            text-transform: uppercase; 
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* NOMI SQUADRE MOLTO GRANDI */
+        .teams-container { 
+            font-size: 1.8rem; 
+            line-height: 1.1;
+            margin: 15px 0;
+            color: #000;
+            text-transform: uppercase;
+        }
+
+        .highlight-cynthia {
+            font-weight: 900;
+            color: var(--cynthia-blue);
+            display: block; /* Mette Cynthia su una riga dedicata per risaltare ancora di più */
+        }
+
+        .other-team {
+            font-weight: 400;
+            display: block;
+        }
+
+        .vs { 
+            font-size: 0.8rem; 
+            color: #bbb; 
+            margin: 8px 0; 
+            display: block; 
+            font-weight: bold;
+        }
+
+        .details-grid { 
+            font-size: 1rem; 
+            color: #444; 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 12px; 
+            margin-top: 20px; 
+            padding-top: 15px;
+            border-top: 2px dashed #eee;
+        }
+
+        .info-item { display: flex; align-items: center; gap: 8px; }
+
+        .field-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 5px;
+            border: 1px solid #eee;
+        }
+
+        .map-btn { 
+            background: var(--cynthia-blue);
+            color: white; 
+            text-decoration: none; 
+            font-weight: 700; 
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: block;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .loading { text-align: center; padding: 50px; color: #999; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 style="margin:0; font-size: 2rem;">CYNTHIA 1920</h1>
+    <p style="margin:5px 0 0; font-weight: 300;">Programma Gare Settimanale</p>
+</header>
+
+<div class="container" id="programma">
+    <div class="loading">Caricamento programma gare...</div>
+</div>
+
+<script>
+    const CSV_URL = '
